@@ -251,4 +251,62 @@ ol {
 .score-card .pct {
     font-size: 13px;
     color: #94a3b8;
-}
+}
+
+/* Team Crest Box and Selection Layout */
+.select-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.select-row select {
+    margin-top: 0;
+    flex: 1;
+}
+
+.crest-box {
+    width: 46px;
+    height: 46px;
+    background: #020617;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.crest-box img {
+    max-width: 32px;
+    max-height: 32px;
+    object-fit: contain;
+}
+
+/* Table and Title Crests */
+.table-crest {
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+    vertical-align: middle;
+    object-fit: contain;
+}
+
+.title-crest {
+    width: 38px;
+    height: 38px;
+    margin: 0 10px;
+    vertical-align: middle;
+    object-fit: contain;
+}
+
+h3 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+

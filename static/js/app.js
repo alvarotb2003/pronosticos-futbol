@@ -1,3 +1,62 @@
+let teamsList = [];
+
+function updateTeamCrests() {
+    const homeSelect = document.getElementById("homeTeam");
+    const awaySelect = document.getElementById("awayTeam");
+
+    const homeCrestBox = document.getElementById("homeCrestBox");
+    const awayCrestBox = document.getElementById("awayCrestBox");
+
+    const selectedHomeOpt = homeSelect.options[homeSelect.selectedIndex];
+    const selectedAwayOpt = awaySelect.options[awaySelect.selectedIndex];
+
+    if (selectedHomeOpt && selectedHomeOpt.dataset.crest) {
+        homeCrestBox.innerHTML = `<img src="${selectedHomeOpt.dataset.crest}" alt="logo">`;
+    } else {
+        homeCrestBox.innerHTML = "⚽";
+    }
+
+    if (selectedAwayOpt && selectedAwayOpt.dataset.crest) {
+        awayCrestBox.innerHTML = `<img src="${selectedAwayOpt.dataset.crest}" alt="logo">`;
+    } else {
+        awayCrestBox.innerHTML = "⚽";
+    }
+}
+
+function populateSelectors() {
+    const homeSelect = document.getElementById("homeTeam");
+    const awaySelect = document.getElementById("awayTeam");
+
+    const prevHome = homeSelect.value;
+    const prevAway = awaySelect.value;
+
+    homeSelect.innerHTML = "<option value=''>Selecciona equipo local</option>";
+    awaySelect.innerHTML = "<option value=''>Selecciona equipo visitante</option>";
+
+    teamsList.forEach(team => {
+        // Excluir el equipo seleccionado en el otro selector
+        if (team.id != prevAway || !prevAway) {
+            const opt = document.createElement("option");
+            opt.value = team.id;
+            opt.textContent = team.name;
+            opt.dataset.crest = team.crest || "";
+            homeSelect.appendChild(opt);
+        }
+        if (team.id != prevHome || !prevHome) {
+            const opt = document.createElement("option");
+            opt.value = team.id;
+            opt.textContent = team.name;
+            opt.dataset.crest = team.crest || "";
+            awaySelect.appendChild(opt);
+        }
+    });
+
+    homeSelect.value = prevHome;
+    awaySelect.value = prevAway;
+
+    updateTeamCrests();
+}
+
 async function loadTeams() {
     const league = document.getElementById("league").value;
     const season = document.getElementById("season").value;
@@ -25,22 +84,13 @@ async function loadTeams() {
         return;
     }
 
-    homeSelect.innerHTML = "<option value=''>Selecciona equipo local</option>";
-    awaySelect.innerHTML = "<option value=''>Selecciona equipo visitante</option>";
-
-    data.teams.forEach(team => {
-        const opt1 = document.createElement("option");
-        opt1.value = team.id;
-        opt1.textContent = team.name;
-
-        const opt2 = document.createElement("option");
-        opt2.value = team.id;
-        opt2.textContent = team.name;
-
-        homeSelect.appendChild(opt1);
-        awaySelect.appendChild(opt2);
-    });
+    teamsList = data.teams;
+    populateSelectors();
 }
+
+// Escuchar cambios para aplicar la deduplicación de opciones en tiempo real
+document.getElementById("homeTeam").addEventListener("change", populateSelectors);
+document.getElementById("awayTeam").addEventListener("change", populateSelectors);
 
 
 async function calculatePrediction() {
@@ -103,7 +153,6 @@ function probabilityBar(label, value) {
 
 function renderFormBadges(formStr) {
     if (!formStr) return "<span class='small'>Sin racha reciente</span>";
-    // Separar por comas o por caracteres individuales
     const chars = formStr.includes(",") ? formStr.split(",") : formStr.split("");
     let html = "<div class='form-container'>";
     chars.forEach(char => {
@@ -133,9 +182,21 @@ function renderPrediction(data) {
     });
     scoresHtml += "</div>";
 
+    const homeCrestHtml = data.home_stats.crest ? `<img class="title-crest" src="${data.home_stats.crest}" alt="" onerror="this.style.display='none'">` : "";
+    const awayCrestHtml = data.away_stats.crest ? `<img class="title-crest" src="${data.away_stats.crest}" alt="" onerror="this.style.display='none'">` : "";
+
+    const tableHomeCrestHtml = data.home_stats.crest ? `<img class="table-crest" src="${data.home_stats.crest}" alt="" onerror="this.style.display='none'">` : "";
+    const tableAwayCrestHtml = data.away_stats.crest ? `<img class="table-crest" src="${data.away_stats.crest}" alt="" onerror="this.style.display='none'">` : "";
+
     resultContent.innerHTML = `
         <div class="result">
-            <h3>${data.match}</h3>
+            <h3>
+                ${homeCrestHtml}
+                <span>${homeName}</span>
+                <span style="margin: 0 10px; color: #64748b;">vs</span>
+                <span>${awayName}</span>
+                ${awayCrestHtml}
+            </h3>
 
             <div class="summary-box">
                 <h4>Recomendación principal</h4>
@@ -154,8 +215,8 @@ function renderPrediction(data) {
                 <thead>
                     <tr>
                         <th>Rendimiento</th>
-                        <th>${homeName}</th>
-                        <th>${awayName}</th>
+                        <th>${tableHomeCrestHtml}${homeName}</th>
+                        <th>${tableAwayCrestHtml}${awayName}</th>
                     </tr>
                 </thead>
                 <tbody>

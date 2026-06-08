@@ -43,6 +43,20 @@ def poisson(goles, media):
     return (math.exp(-media) * pow(media, goles)) / math.factorial(goles)
 
 
+def calculate_form_factor(form_str):
+    if not form_str:
+        return 1.0
+    chars = form_str.replace(",", "").upper()
+    factor = 1.0
+    # Process up to the last 5 matches
+    for c in chars[:5]:
+        if c == 'W':
+            factor += 0.03
+        elif c == 'L':
+            factor -= 0.03
+    return max(0.8, min(1.2, factor))
+
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -143,6 +157,7 @@ def custom_prediction():
     home_goals_for = safe_float(home_stats.get("goalsFor") if home_stats else default_goals_for)
     home_goals_against = safe_float(home_stats.get("goalsAgainst") if home_stats else default_goals_against)
     home_form = home_stats.get("form") if home_stats and home_stats.get("form") else default_form
+    home_crest = home_stats.get("team", {}).get("crest") if home_stats and home_stats.get("team") else default_form
 
     away_played = safe_float(away_stats.get("playedGames") if away_stats else default_played)
     away_won = int(away_stats.get("won") if away_stats else default_won)
@@ -151,6 +166,7 @@ def custom_prediction():
     away_goals_for = safe_float(away_stats.get("goalsFor") if away_stats else default_goals_for)
     away_goals_against = safe_float(away_stats.get("goalsAgainst") if away_stats else default_goals_against)
     away_form = away_stats.get("form") if away_stats and away_stats.get("form") else default_form
+    away_crest = away_stats.get("team", {}).get("crest") if away_stats and away_stats.get("team") else default_form
 
     # Calculate average goals. 
     # Fallback to 1.2 goals expected per match if no games have been played.
@@ -168,9 +184,20 @@ def custom_prediction():
         away_attack = 1.2
         away_defense = 1.2
 
+    # Apply form weighting
+    home_form_factor = calculate_form_factor(home_form)
+    away_form_factor = calculate_form_factor(away_form)
+    home_attack = home_attack * home_form_factor
+    away_attack = away_attack * away_form_factor
+
     # Goles esperados
     exp_home_goals = max((home_attack + away_defense) / 2, 0.05)
     exp_away_goals = max((away_attack + home_defense) / 2, 0.05)
+
+    # Apply home advantage if not neutral site (World Cup "WC" or Euro "EC")
+    if league not in ["WC", "EC"]:
+        exp_home_goals = exp_home_goals * 1.10
+        exp_away_goals = exp_away_goals * 0.90
 
     prob_home_win = 0
     prob_draw = 0
@@ -265,7 +292,8 @@ def custom_prediction():
             "goals_against": int(home_goals_against),
             "avg_for": round(home_attack, 2),
             "avg_against": round(home_defense, 2),
-            "form": home_form
+            "form": home_form,
+            "crest": home_crest
         },
         "away_stats": {
             "played": int(away_played),
@@ -276,7 +304,8 @@ def custom_prediction():
             "goals_against": int(away_goals_against),
             "avg_for": round(away_attack, 2),
             "avg_against": round(away_defense, 2),
-            "form": away_form
+            "form": away_form,
+            "crest": away_crest
         },
         "probabilities": {
             "home_win": round(prob_home_win * 100, 2),
