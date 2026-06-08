@@ -159,6 +159,18 @@ async function calculatePrediction() {
         return;
     }
 
+    if (data.insufficient_data) {
+        resultContent.innerHTML = `
+            <div class="result" style="text-align: center; padding: 20px;">
+                <div style="background: #fee2e2; color: #991b1b; padding: 15px; border-radius: 8px; font-weight: bold; border: 1px solid #fca5a5; margin-bottom: 15px;">
+                    ⚠️ Datos Insuficientes
+                </div>
+                <p style="color: #4b5563; font-size: 1.05em; line-height: 1.5; margin-bottom: 0;">${data.message}</p>
+            </div>
+        `;
+        return;
+    }
+
     renderPrediction(data);
 }
 
@@ -211,6 +223,26 @@ function renderPrediction(data) {
 
     const tableHomeCrestHtml = data.home_stats.crest ? `<img class="table-crest" src="${data.home_stats.crest}" alt="" onerror="this.style.display='none'">` : "";
     const tableAwayCrestHtml = data.away_stats.crest ? `<img class="table-crest" src="${data.away_stats.crest}" alt="" onerror="this.style.display='none'">` : "";
+    // Banner de advertencia si la calidad de los datos es Limitada (menos de 5 partidos)
+    const warningHtml = data.data_quality === "Limitada" ? `
+        <div style="background: #fffbeb; color: #b45309; padding: 12px; border-radius: 6px; border: 1px solid #fde68a; margin-bottom: 15px; font-size: 0.9em; line-height: 1.4; text-align: left;">
+            <strong>⚠️ Advertencia:</strong> Datos limitados en el torneo actual para uno o ambos equipos. Las predicciones tienen un margen de error más alto.
+        </div>
+    ` : "";
+
+    // Badge de calidad de datos
+    let qualityColor = "#16a34a"; // Excelente (verde)
+    if (data.data_quality === "Buena") qualityColor = "#0284c7"; // Azul
+    if (data.data_quality === "Limitada") qualityColor = "#d97706"; // Ámbar
+
+    const qualityBadgeHtml = `
+        <div style="margin: 10px 0 15px 0; text-align: center;">
+            <span style="display: inline-block; padding: 4px 10px; border-radius: 4px; font-weight: bold; background: #f1f5f9; color: #475569; font-size: 0.85em; border: 1px solid #cbd5e1;">
+                Calidad de datos: <span style="color: ${qualityColor};">${data.data_quality}</span>
+            </span>
+        </div>
+    `;
+
     resultContent.innerHTML = `
         <div class="result">
             <h3>
@@ -221,6 +253,9 @@ function renderPrediction(data) {
                 ${awayCrestHtml}
             </h3>
 
+            ${qualityBadgeHtml}
+            ${warningHtml}
+
             <div class="summary-box">
                 <h4>Recomendación principal</h4>
                 <p>
@@ -229,7 +264,9 @@ function renderPrediction(data) {
                 </p>
                 <p>
                     Confianza:
-                    <span class="warn">${data.recommendation.confidence} (${data.recommendation.confidence_val}%)</span>
+                    <span class="warn" style="${data.recommendation.confidence === 'Muy Baja' ? 'color: #ef4444; font-weight: bold;' : ''}">
+                        ${data.recommendation.confidence} (${data.recommendation.confidence_val}%)
+                    </span>
                 </p>
             </div>
 
@@ -298,7 +335,7 @@ function renderPrediction(data) {
             ${probabilityBar("Sí, ambos anotan", data.probabilities.btts_yes)}
             ${probabilityBar("No anotan ambos", data.probabilities.btts_no)}
 
-            <h4>Marcadores más probables (Matriz de 0-0 a 5-5)</h4>
+            <h4>Marcadores más probables (Matriz de 0-0 a 8-8)</h4>
             ${scoresHtml}
         </div>
     `;
