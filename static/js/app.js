@@ -148,30 +148,41 @@ async function calculatePrediction() {
 
     const url = `/api/custom-prediction?league=${league}&season=${season}&home=${home}&away=${away}&home_name=${encodeURIComponent(homeName)}&away_name=${encodeURIComponent(awayName)}`;
 
-    const res = await fetch(url);
-    const data = await res.json();
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
 
-    if (data.error) {
-        resultContent.innerHTML = `
-            <p class="error">${data.error}</p>
-            <pre>${JSON.stringify(data, null, 2)}</pre>
-        `;
-        return;
-    }
+        if (data.error) {
+            resultContent.innerHTML = `
+                <p class="error">${data.error}</p>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+            return;
+        }
 
-    if (data.insufficient_data) {
+        if (data.insufficient_data) {
+            resultContent.innerHTML = `
+                <div class="result" style="text-align: center; padding: 20px;">
+                    <div style="background: #fee2e2; color: #991b1b; padding: 15px; border-radius: 8px; font-weight: bold; border: 1px solid #fca5a5; margin-bottom: 15px;">
+                        ⚠️ Datos Insuficientes
+                    </div>
+                    <p style="color: #4b5563; font-size: 1.05em; line-height: 1.5; margin-bottom: 0;">${data.message}</p>
+                </div>
+            `;
+            return;
+        }
+
+        renderPrediction(data);
+    } catch (error) {
         resultContent.innerHTML = `
             <div class="result" style="text-align: center; padding: 20px;">
                 <div style="background: #fee2e2; color: #991b1b; padding: 15px; border-radius: 8px; font-weight: bold; border: 1px solid #fca5a5; margin-bottom: 15px;">
-                    ⚠️ Datos Insuficientes
+                    ⚠️ Error al Calcular
                 </div>
-                <p style="color: #4b5563; font-size: 1.05em; line-height: 1.5; margin-bottom: 0;">${data.message}</p>
+                <p style="color: #4b5563; font-size: 1.05em; line-height: 1.5; margin-bottom: 0;">Ocurrió un error al obtener la predicción: ${error.message}</p>
             </div>
         `;
-        return;
     }
-
-    renderPrediction(data);
 }
 
 
