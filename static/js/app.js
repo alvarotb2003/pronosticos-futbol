@@ -234,17 +234,27 @@ function renderPrediction(data) {
 
     const tableHomeCrestHtml = data.home_stats.crest ? `<img class="table-crest" src="${data.home_stats.crest}" alt="" onerror="this.style.display='none'">` : "";
     const tableAwayCrestHtml = data.away_stats.crest ? `<img class="table-crest" src="${data.away_stats.crest}" alt="" onerror="this.style.display='none'">` : "";
-    // Banner de advertencia si la calidad de los datos es Limitada (menos de 5 partidos)
-    const warningHtml = data.data_quality === "Limitada" ? `
-        <div style="background: #fffbeb; color: #b45309; padding: 12px; border-radius: 6px; border: 1px solid #fde68a; margin-bottom: 15px; font-size: 0.9em; line-height: 1.4; text-align: left;">
-            <strong>⚠️ Advertencia:</strong> Datos limitados en el torneo actual para uno o ambos equipos. Las predicciones tienen un margen de error más alto.
-        </div>
-    ` : "";
+    // Banner de advertencia si la calidad de los datos es Limitada o Estimada por ELO
+    let warningHtml = "";
+    if (data.data_quality === "Limitada") {
+        warningHtml = `
+            <div style="background: #fffbeb; color: #b45309; padding: 12px; border-radius: 6px; border: 1px solid #fde68a; margin-bottom: 15px; font-size: 0.9em; line-height: 1.4; text-align: left;">
+                <strong>⚠️ Advertencia:</strong> Datos limitados en el torneo actual para uno o ambos equipos. Las predicciones tienen un margen de error más alto.
+            </div>
+        `;
+    } else if (data.data_quality === "Estimada (Basada en ELO)") {
+        warningHtml = `
+            <div style="background: #fdf2f2; color: #9b1c1c; padding: 12px; border-radius: 6px; border: 1px solid #fde8e8; margin-bottom: 15px; font-size: 0.9em; line-height: 1.4; text-align: left;">
+                <strong>⚠️ Datos Estimados mediante ELO:</strong> Estos equipos aún no tienen partidos finalizados en este torneo. Las probabilidades se han calculado utilizando el sistema de fuerza ELO histórico base.
+            </div>
+        `;
+    }
 
     // Badge de calidad de datos
     let qualityColor = "#16a34a"; // Excelente (verde)
     if (data.data_quality === "Buena") qualityColor = "#0284c7"; // Azul
     if (data.data_quality === "Limitada") qualityColor = "#d97706"; // Ámbar
+    if (data.data_quality === "Estimada (Basada en ELO)") qualityColor = "#9b1c1c"; // Rojo oscuro
 
     const qualityBadgeHtml = `
         <div style="margin: 10px 0 15px 0; text-align: center;">

@@ -352,11 +352,26 @@ def custom_prediction():
 
     elo, stats, avg_home_goals, avg_away_goals = process_competition_matches(data.get("matches", []))
 
-    if home_id not in stats or away_id not in stats:
-        return jsonify({
-            "insufficient_data": True,
-            "message": "No hay estadísticas suficientes en el torneo para estos equipos."
-        })
+    home_name_arg = request.args.get("home_name", f"Equipo {home_id}")
+    away_name_arg = request.args.get("away_name", f"Equipo {away_id}")
+
+    if home_id not in stats:
+        stats[home_id] = {
+            "name": home_name_arg,
+            "crest": "",
+            "home_played": 0, "home_won": 0, "home_draw": 0, "home_lost": 0, "home_goals_for": 0, "home_goals_against": 0,
+            "away_played": 0, "away_won": 0, "away_draw": 0, "away_lost": 0, "away_goals_for": 0, "away_goals_against": 0,
+            "recent": []
+        }
+        
+    if away_id not in stats:
+        stats[away_id] = {
+            "name": away_name_arg,
+            "crest": "",
+            "home_played": 0, "home_won": 0, "home_draw": 0, "home_lost": 0, "home_goals_for": 0, "home_goals_against": 0,
+            "away_played": 0, "away_won": 0, "away_draw": 0, "away_lost": 0, "away_goals_for": 0, "away_goals_against": 0,
+            "recent": []
+        }
 
     h_stats = stats[home_id]
     a_stats = stats[away_id]
@@ -364,21 +379,16 @@ def custom_prediction():
     home_played_total = h_stats["home_played"] + h_stats["away_played"]
     away_played_total = a_stats["home_played"] + a_stats["away_played"]
 
-    # REGLA CRÍTICA: Si un equipo tiene menos de 3 partidos, NO generar predicción
-    if home_played_total < 3 or away_played_total < 3:
-        return jsonify({
-            "insufficient_data": True,
-            "message": f"Datos insuficientes para realizar un pronóstico fiable. El equipo local tiene {home_played_total} partidos jugados y el visitante {away_played_total}. Se requieren al menos 3 partidos jugados por cada equipo en el torneo activo."
-        })
-
     # Determinar Calidad de Datos
     min_played = min(home_played_total, away_played_total)
     if min_played >= 8:
         data_quality = "Excelente"
     elif min_played >= 5:
         data_quality = "Buena"
-    else:
+    elif min_played >= 3:
         data_quality = "Limitada"
+    else:
+        data_quality = "Estimada (Basada en ELO)"
 
     # ELO de cada equipo
     home_elo = elo.get(home_id, 1500.0)
