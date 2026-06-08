@@ -101,14 +101,37 @@ function probabilityBar(label, value) {
 }
 
 
+function renderFormBadges(formStr) {
+    if (!formStr) return "<span class='small'>Sin racha reciente</span>";
+    // Separar por comas o por caracteres individuales
+    const chars = formStr.includes(",") ? formStr.split(",") : formStr.split("");
+    let html = "<div class='form-container'>";
+    chars.forEach(char => {
+        const c = char.trim().toUpperCase();
+        let cls = "badge-d";
+        if (c === "W") cls = "badge-w";
+        else if (c === "L") cls = "badge-l";
+        html += `<span class="badge ${cls}">${c}</span>`;
+    });
+    html += "</div>";
+    return html;
+}
+
+
 function renderPrediction(data) {
     const resultContent = document.getElementById("resultContent");
+    const [homeName, awayName] = data.match.split(" vs ");
 
-    let scoresHtml = "";
-
+    let scoresHtml = "<div class='score-grid'>";
     data.top_scores.forEach(item => {
-        scoresHtml += `<li>${item.score} - ${item.probability}%</li>`;
+        scoresHtml += `
+            <div class="score-card">
+                <div class="val">${item.score}</div>
+                <div class="pct">${item.probability}%</div>
+            </div>
+        `;
     });
+    scoresHtml += "</div>";
 
     resultContent.innerHTML = `
         <div class="result">
@@ -126,25 +149,68 @@ function renderPrediction(data) {
                 </p>
             </div>
 
-            <h4>Goles esperados</h4>
-            <p>Equipo 1 / Local: ${data.expected_goals.home}</p>
-            <p>Equipo 2 / Visitante: ${data.expected_goals.away}</p>
+            <h4>Comparativa H2H (Rendimiento)</h4>
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>Rendimiento</th>
+                        <th>${homeName}</th>
+                        <th>${awayName}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Partidos Jugados</td>
+                        <td>${data.home_stats.played}</td>
+                        <td>${data.away_stats.played}</td>
+                    </tr>
+                    <tr>
+                        <td>V / E / D</td>
+                        <td>${data.home_stats.won} / ${data.home_stats.draw} / ${data.home_stats.lost}</td>
+                        <td>${data.away_stats.won} / ${data.away_stats.draw} / ${data.away_stats.lost}</td>
+                    </tr>
+                    <tr>
+                        <td>Goles Anotados (Promedio)</td>
+                        <td>${data.home_stats.goals_for} (<strong>${data.home_stats.avg_for}</strong>)</td>
+                        <td>${data.away_stats.goals_for} (<strong>${data.away_stats.avg_for}</strong>)</td>
+                    </tr>
+                    <tr>
+                        <td>Goles Recibidos (Promedio)</td>
+                        <td>${data.home_stats.goals_against} (<strong>${data.home_stats.avg_against}</strong>)</td>
+                        <td>${data.away_stats.goals_against} (<strong>${data.away_stats.avg_against}</strong>)</td>
+                    </tr>
+                    <tr>
+                        <td>Racha Reciente</td>
+                        <td>${renderFormBadges(data.home_stats.form)}</td>
+                        <td>${renderFormBadges(data.away_stats.form)}</td>
+                    </tr>
+                </tbody>
+            </table>
 
-            <h4>Probabilidades 1X2</h4>
-            ${probabilityBar("Gana Equipo 1 / Local", data.probabilities.home_win)}
+            <h4>Goles esperados del partido</h4>
+            <p><strong>${homeName}</strong> (Local): ${data.expected_goals.home}</p>
+            <p><strong>${awayName}</strong> (Visitante): ${data.expected_goals.away}</p>
+
+            <h4>Probabilidades de Resultado (1X2)</h4>
+            ${probabilityBar(`Gana ${homeName}`, data.probabilities.home_win)}
             ${probabilityBar("Empate", data.probabilities.draw)}
-            ${probabilityBar("Gana Equipo 2 / Visitante", data.probabilities.away_win)}
+            ${probabilityBar(`Gana ${awayName}`, data.probabilities.away_win)}
 
-            <h4>Mercado de goles</h4>
+            <h4>Doble Oportunidad</h4>
+            ${probabilityBar(`Gana ${homeName} o Empate (1X)`, data.probabilities.dc_1x)}
+            ${probabilityBar(`Gana ${awayName} o Empate (X2)`, data.probabilities.dc_x2)}
+            ${probabilityBar(`Gana ${homeName} o Gana ${awayName} (12)`, data.probabilities.dc_12)}
+
+            <h4>Mercado de goles (Over/Under)</h4>
             ${probabilityBar("Más de 2.5 goles", data.probabilities.over_25)}
             ${probabilityBar("Menos de 2.5 goles", data.probabilities.under_25)}
 
             <h4>Ambos equipos anotan</h4>
-            ${probabilityBar("Sí", data.probabilities.btts_yes)}
-            ${probabilityBar("No", data.probabilities.btts_no)}
+            ${probabilityBar("Sí, ambos anotan", data.probabilities.btts_yes)}
+            ${probabilityBar("No anotan ambos", data.probabilities.btts_no)}
 
             <h4>Marcadores más probables</h4>
-            <ol>${scoresHtml}</ol>
+            ${scoresHtml}
         </div>
     `;
 }

@@ -129,16 +129,28 @@ def custom_prediction():
     # Fallback defaults if no statistics exist yet (e.g. before World Cup starts)
     # or if the team was not found in the standings
     default_played = 0
+    default_won = 0
+    default_draw = 0
+    default_lost = 0
     default_goals_for = 0
     default_goals_against = 0
+    default_form = ""
 
     home_played = safe_float(home_stats.get("playedGames") if home_stats else default_played)
+    home_won = int(home_stats.get("won") if home_stats else default_won)
+    home_draw = int(home_stats.get("draw") if home_stats else default_draw)
+    home_lost = int(home_stats.get("lost") if home_stats else default_lost)
     home_goals_for = safe_float(home_stats.get("goalsFor") if home_stats else default_goals_for)
     home_goals_against = safe_float(home_stats.get("goalsAgainst") if home_stats else default_goals_against)
+    home_form = home_stats.get("form") if home_stats and home_stats.get("form") else default_form
 
     away_played = safe_float(away_stats.get("playedGames") if away_stats else default_played)
+    away_won = int(away_stats.get("won") if away_stats else default_won)
+    away_draw = int(away_stats.get("draw") if away_stats else default_draw)
+    away_lost = int(away_stats.get("lost") if away_stats else default_lost)
     away_goals_for = safe_float(away_stats.get("goalsFor") if away_stats else default_goals_for)
     away_goals_against = safe_float(away_stats.get("goalsAgainst") if away_stats else default_goals_against)
+    away_form = away_stats.get("form") if away_stats and away_stats.get("form") else default_form
 
     # Calculate average goals. 
     # Fallback to 1.2 goals expected per match if no games have been played.
@@ -203,6 +215,11 @@ def custom_prediction():
         reverse=True
     )[:5]
 
+    # Double Chance probabilities
+    prob_dc_1x = prob_home_win + prob_draw
+    prob_dc_x2 = prob_away_win + prob_draw
+    prob_dc_12 = prob_home_win + prob_away_win
+
     probs = {
         "home_win": prob_home_win,
         "draw": prob_draw,
@@ -239,6 +256,28 @@ def custom_prediction():
             "home": round(exp_home_goals, 2),
             "away": round(exp_away_goals, 2)
         },
+        "home_stats": {
+            "played": int(home_played),
+            "won": home_won,
+            "draw": home_draw,
+            "lost": home_lost,
+            "goals_for": int(home_goals_for),
+            "goals_against": int(home_goals_against),
+            "avg_for": round(home_attack, 2),
+            "avg_against": round(home_defense, 2),
+            "form": home_form
+        },
+        "away_stats": {
+            "played": int(away_played),
+            "won": away_won,
+            "draw": away_draw,
+            "lost": away_lost,
+            "goals_for": int(away_goals_for),
+            "goals_against": int(away_goals_against),
+            "avg_for": round(away_attack, 2),
+            "avg_against": round(away_defense, 2),
+            "form": away_form
+        },
         "probabilities": {
             "home_win": round(prob_home_win * 100, 2),
             "draw": round(prob_draw * 100, 2),
@@ -246,7 +285,10 @@ def custom_prediction():
             "over_25": round(prob_over_25 * 100, 2),
             "under_25": round(prob_under_25 * 100, 2),
             "btts_yes": round(prob_btts_yes * 100, 2),
-            "btts_no": round(prob_btts_no * 100, 2)
+            "btts_no": round(prob_btts_no * 100, 2),
+            "dc_1x": round(prob_dc_1x * 100, 2),
+            "dc_x2": round(prob_dc_x2 * 100, 2),
+            "dc_12": round(prob_dc_12 * 100, 2)
         },
         "top_scores": [
             {
