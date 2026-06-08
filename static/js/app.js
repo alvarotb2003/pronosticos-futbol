@@ -59,7 +59,6 @@ function populateSelectors() {
 
 async function loadTeams() {
     const league = document.getElementById("league").value;
-    const season = document.getElementById("season").value;
 
     const homeSelect = document.getElementById("homeTeam");
     const awaySelect = document.getElementById("awayTeam");
@@ -67,7 +66,7 @@ async function loadTeams() {
     homeSelect.innerHTML = "<option>Cargando equipos...</option>";
     awaySelect.innerHTML = "<option>Cargando equipos...</option>";
 
-    const res = await fetch(`/api/teams-by-league?league=${league}&season=${season}`);
+    const res = await fetch(`/api/teams-by-league?league=${league}`);
     const data = await res.json();
 
     if (data.message || !data.teams) {
@@ -95,7 +94,6 @@ document.getElementById("awayTeam").addEventListener("change", populateSelectors
 
 async function calculatePrediction() {
     const league = document.getElementById("league").value;
-    const season = document.getElementById("season").value;
 
     const homeSelect = document.getElementById("homeTeam");
     const awaySelect = document.getElementById("awayTeam");
@@ -122,7 +120,7 @@ async function calculatePrediction() {
     resultCard.style.display = "block";
     resultContent.innerHTML = "Calculando probabilidades...";
 
-    const url = `/api/custom-prediction?league=${league}&season=${season}&home=${home}&away=${away}&home_name=${encodeURIComponent(homeName)}&away_name=${encodeURIComponent(awayName)}`;
+    const url = `/api/custom-prediction?league=${league}&home=${home}&away=${away}&home_name=${encodeURIComponent(homeName)}&away_name=${encodeURIComponent(awayName)}`;
 
     const res = await fetch(url);
     const data = await res.json();
@@ -278,54 +276,4 @@ function renderPrediction(data) {
             ${scoresHtml}
         </div>
     `;
-}
-
-const leagueSeasons = {
-    "WC": [
-        { value: "2026", text: "2026 (Mundial Actual)" },
-        { value: "2022", text: "2022 (Catar)" },
-        { value: "2018", text: "2018 (Rusia)" }
-    ],
-    "EC": [
-        { value: "2024", text: "2024 (Alemania)" },
-        { value: "2020", text: "2020 (Europa)" },
-        { value: "2016", text: "2016 (Francia)" }
-    ],
-    "CL": [
-        { value: "2025", text: "2025/2026 (Actual)" },
-        { value: "2024", text: "2024/2025" },
-        { value: "2023", text: "2023/2024" },
-        { value: "2022", text: "2022/2023" }
-    ],
-    "BSA": [
-        { value: "2026", text: "Temporada 2026 (Actual)" },
-        { value: "2025", text: "Temporada 2025" },
-        { value: "2024", text: "Temporada 2024" },
-        { value: "2023", text: "Temporada 2023" }
-    ],
-    "default": [
-        { value: "2025", text: "2025/2026 (Actual)" },
-        { value: "2024", text: "2024/2025" },
-        { value: "2023", text: "2023/2024" },
-        { value: "2022", text: "2022/2023" }
-    ]
-};
-
-function updateSeasonOptions() {
-    const leagueSelect = document.getElementById("league");
-    const seasonSelect = document.getElementById("season");
-    const league = leagueSelect.value;
-    
-    const seasons = leagueSeasons[league] || leagueSeasons["default"];
-    
-    seasonSelect.innerHTML = "";
-    seasons.forEach(s => {
-        const opt = document.createElement("option");
-        opt.value = s.value;
-        opt.textContent = s.text;
-        seasonSelect.appendChild(opt);
-    });
-}
-
-// Inicializar las temporadas según el torneo seleccionado por defecto al cargar la página
-updateSeasonOptions();
+}

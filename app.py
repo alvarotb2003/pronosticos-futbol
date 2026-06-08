@@ -31,8 +31,8 @@ def api_get(endpoint, params=None):
         }
 
 
-def get_cached_matches(league, season):
-    cache_key = f"{league}_{season}"
+def get_cached_matches(league):
+    cache_key = league
     now = time.time()
     
     if cache_key in matches_cache:
@@ -40,16 +40,8 @@ def get_cached_matches(league, season):
         if now - timestamp < CACHE_TIMEOUT:
             return data
             
-    # Si no está en caché o expiró, consultar la API
-    params = {}
-    if season:
-        params["season"] = season
-        
-    data = api_get(f"/competitions/{league}/matches", params)
-    
-    # Fallback si el plan gratuito bloquea la temporada (403)
-    if data.get("errorCode") == 403 and season:
-        data = api_get(f"/competitions/{league}/matches")
+    # Si no está en caché o expiró, consultar la API (por defecto trae la temporada actual)
+    data = api_get(f"/competitions/{league}/matches")
         
     if data and "matches" in data:
         matches_cache[cache_key] = (now, data)
@@ -202,15 +194,13 @@ def index():
 @app.route("/api/teams-by-league")
 def teams_by_league():
     league = request.args.get("league")
-    season = request.args.get("season")
 
     if not league:
         return jsonify({"error": "Falta seleccionar torneo"}), 400
 
-    data = get_cached_matches(league, season)
+    data = get_cached_matches(league)
     
     if not data or "matches" not in data:
-        # Fallback si hay algún error con la consulta de partidos
         return jsonify({
             "error": "Error al consultar los partidos en la API",
             "message": data.get("message", "No se recibieron partidos de la API.")
@@ -235,7 +225,6 @@ def teams_by_league():
 @app.route("/api/custom-prediction")
 def custom_prediction():
     league = request.args.get("league")
-    season = request.args.get("season")
 
     home_id = request.args.get("home")
     away_id = request.args.get("away")
@@ -254,7 +243,7 @@ def custom_prediction():
     away_id = int(away_id)
 
     # Obtener los partidos (usando la caché)
-    data = get_cached_matches(league, season)
+    data = get_cached_matches(league)
     
     if not data or "matches" not in data:
         return jsonify({
@@ -437,7 +426,6 @@ def custom_prediction():
 
     result = {
         "match": f"{h_stats['name']} vs {a_stats['name']}",
-        "season": season,
         "expected_goals": {
             "home": round(exp_home_goals, 2),
             "away": round(exp_away_goals, 2)
