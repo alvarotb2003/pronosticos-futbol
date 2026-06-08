@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Pronósticos de Fútbol</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+
+<body>
+
+<div class="container">
+    <h1>⚽ Pronósticos de Fútbol</h1>
+
+    <div class="card">
+        <h2>Seleccionar torneo y equipos</h2>
+
+        <label>Temporada</label>
+        <input type="number" id="season" value="2024">
+
+        <label>Torneo</label>
+        <select id="league">
+            <option value="WC">Copa Mundial de la FIFA</option>
+            <option value="EC">Eurocopa</option>
+            <option value="CL">UEFA Champions League</option>
+            <option value="PL">Premier League Inglaterra</option>
+            <option value="PD">LaLiga España</option>
+            <option value="SA">Serie A Italia</option>
+            <option value="BL1">Bundesliga Alemania</option>
+            <option value="FL1">Ligue 1 Francia</option>
+            <option value="DED">Eredivisie Holanda</option>
+            <option value="PPL">Primeira Liga Portugal</option>
+            <option value="ELC">Championship Inglaterra</option>
+            <option value="BSA">Brasileirão Serie A</option>
+        </select>
+
+        <button onclick="loadTeams()">Cargar equipos del torneo</button>
+
+        <div class="grid">
+            <div>
+                <label>Equipo 1 / Local</label>
+                <select id="homeTeam">
+                    <option value="">Primero carga equipos</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Equipo 2 / Visitante</label>
+                <select id="awayTeam">
+                    <option value="">Primero carga equipos</option>
+                </select>
+            </div>
+        </div>
+
+        <button onclick="calculatePrediction()">Calcular probabilidades</button>
+
+        <p class="small">
+            Nota: Equipo 1 se toma como local y Equipo 2 como visitante.
+            En torneos neutrales puede variar un poco.
+        </p>
+
+        <p class="small">
+            Con el plan gratis de football-data.org, se puede consultar la Copa Mundial (WC), Champions League (CL), Eurocopa (EC), Premier League (PL), LaLiga (PD), Serie A (SA), Bundesliga (BL1), Ligue 1 (FL1), Eredivisie (DED), Primeira Liga (PPL), Championship (ELC) y Brasileirão (BSA). Límite de 10 peticiones por minuto.
+        </p>
+    </div>
+
+    <div id="resultCard" class="card" style="display:none;">
+        <h2>Resultado del pronóstico</h2>
+        <div id="resultContent"></div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
