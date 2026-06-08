@@ -31,8 +31,8 @@ def api_get(endpoint, params=None):
         }
 
 
-def get_cached_matches(league):
-    cache_key = league
+def get_cached_matches(league, season=None):
+    cache_key = f"{league}_{season}" if season else league
     now = time.time()
     
     if cache_key in matches_cache:
@@ -40,8 +40,9 @@ def get_cached_matches(league):
         if now - timestamp < CACHE_TIMEOUT:
             return data
             
-    # Si no está en caché o expiró, consultar la API (por defecto trae la temporada actual)
-    data = api_get(f"/competitions/{league}/matches")
+    # Consultar la API de partidos, pasando la temporada si está presente
+    params = {"season": season} if season else None
+    data = api_get(f"/competitions/{league}/matches", params=params)
         
     if data and "matches" in data:
         matches_cache[cache_key] = (now, data)
@@ -194,11 +195,12 @@ def index():
 @app.route("/api/teams-by-league")
 def teams_by_league():
     league = request.args.get("league")
+    season = request.args.get("season")
 
     if not league:
         return jsonify({"error": "Falta seleccionar torneo"}), 400
 
-    data = get_cached_matches(league)
+    data = get_cached_matches(league, season)
     
     if not data or "matches" not in data:
         return jsonify({
@@ -225,6 +227,7 @@ def teams_by_league():
 @app.route("/api/custom-prediction")
 def custom_prediction():
     league = request.args.get("league")
+    season = request.args.get("season")
 
     home_id = request.args.get("home")
     away_id = request.args.get("away")
@@ -243,7 +246,7 @@ def custom_prediction():
     away_id = int(away_id)
 
     # Obtener los partidos (usando la caché)
-    data = get_cached_matches(league)
+    data = get_cached_matches(league, season)
     
     if not data or "matches" not in data:
         return jsonify({

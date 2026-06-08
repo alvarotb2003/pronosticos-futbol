@@ -16,7 +16,7 @@
         <h2>Seleccionar torneo y equipos</h2>
 
         <label>Torneo</label>
-        <select id="league">
+        <select id="league" onchange="updateSeasonOptions()">
             <option value="WC">Copa Mundial de la FIFA</option>
             <option value="EC">Eurocopa</option>
             <option value="CL">UEFA Champions League</option>
@@ -29,6 +29,11 @@
             <option value="PPL">Primeira Liga Portugal</option>
             <option value="ELC">Championship Inglaterra</option>
             <option value="BSA">Brasileirão Serie A</option>
+        </select>
+
+        <label>Temporada</label>
+        <select id="season">
+            <!-- Poblado dinámicamente -->
         </select>
 
         <button onclick="loadTeams()">Cargar equipos del torneo</button>

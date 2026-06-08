@@ -1,5 +1,29 @@
 let teamsList = [];
 
+function updateSeasonOptions() {
+    const league = document.getElementById("league").value;
+    const seasonSelect = document.getElementById("season");
+    
+    seasonSelect.innerHTML = "";
+    
+    let seasons = [];
+    if (league === "WC") {
+        seasons = [2026];
+    } else if (league === "EC") {
+        seasons = [2024];
+    } else {
+        // Ligas estándar nacionales y Champions League
+        seasons = [2025, 2024, 2023];
+    }
+    
+    seasons.forEach(year => {
+        const opt = document.createElement("option");
+        opt.value = year;
+        opt.textContent = year;
+        seasonSelect.appendChild(opt);
+    });
+}
+
 function updateTeamCrests() {
     const homeSelect = document.getElementById("homeTeam");
     const awaySelect = document.getElementById("awayTeam");
@@ -59,6 +83,7 @@ function populateSelectors() {
 
 async function loadTeams() {
     const league = document.getElementById("league").value;
+    const season = document.getElementById("season").value;
 
     const homeSelect = document.getElementById("homeTeam");
     const awaySelect = document.getElementById("awayTeam");
@@ -66,7 +91,7 @@ async function loadTeams() {
     homeSelect.innerHTML = "<option>Cargando equipos...</option>";
     awaySelect.innerHTML = "<option>Cargando equipos...</option>";
 
-    const res = await fetch(`/api/teams-by-league?league=${league}`);
+    const res = await fetch(`/api/teams-by-league?league=${league}&season=${season}`);
     const data = await res.json();
 
     if (data.message || !data.teams) {
@@ -94,6 +119,7 @@ document.getElementById("awayTeam").addEventListener("change", populateSelectors
 
 async function calculatePrediction() {
     const league = document.getElementById("league").value;
+    const season = document.getElementById("season").value;
 
     const homeSelect = document.getElementById("homeTeam");
     const awaySelect = document.getElementById("awayTeam");
@@ -120,7 +146,7 @@ async function calculatePrediction() {
     resultCard.style.display = "block";
     resultContent.innerHTML = "Calculando probabilidades...";
 
-    const url = `/api/custom-prediction?league=${league}&home=${home}&away=${away}&home_name=${encodeURIComponent(homeName)}&away_name=${encodeURIComponent(awayName)}`;
+    const url = `/api/custom-prediction?league=${league}&season=${season}&home=${home}&away=${away}&home_name=${encodeURIComponent(homeName)}&away_name=${encodeURIComponent(awayName)}`;
 
     const res = await fetch(url);
     const data = await res.json();
@@ -276,4 +302,9 @@ function renderPrediction(data) {
             ${scoresHtml}
         </div>
     `;
-}
+}
+
+// Inicializar las temporadas disponibles al cargar la página
+document.addEventListener("DOMContentLoaded", () => {
+    updateSeasonOptions();
+});
