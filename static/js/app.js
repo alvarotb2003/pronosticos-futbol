@@ -187,7 +187,6 @@ function renderPrediction(data) {
 
     const tableHomeCrestHtml = data.home_stats.crest ? `<img class="table-crest" src="${data.home_stats.crest}" alt="" onerror="this.style.display='none'">` : "";
     const tableAwayCrestHtml = data.away_stats.crest ? `<img class="table-crest" src="${data.away_stats.crest}" alt="" onerror="this.style.display='none'">` : "";
-
     resultContent.innerHTML = `
         <div class="result">
             <h3>
@@ -206,7 +205,7 @@ function renderPrediction(data) {
                 </p>
                 <p>
                     Confianza:
-                    <span class="warn">${data.recommendation.confidence}</span>
+                    <span class="warn">${data.recommendation.confidence} (${data.recommendation.confidence_val}%)</span>
                 </p>
             </div>
 
@@ -220,6 +219,11 @@ function renderPrediction(data) {
                     </tr>
                 </thead>
                 <tbody>
+                    <tr>
+                        <td>Sistema ELO (Fuerza)</td>
+                        <td><strong>${data.home_stats.elo}</strong></td>
+                        <td><strong>${data.away_stats.elo}</strong></td>
+                    </tr>
                     <tr>
                         <td>Partidos Jugados</td>
                         <td>${data.home_stats.played}</td>
@@ -248,9 +252,9 @@ function renderPrediction(data) {
                 </tbody>
             </table>
 
-            <h4>Goles esperados del partido</h4>
-            <p><strong>${homeName}</strong> (Local): ${data.expected_goals.home}</p>
-            <p><strong>${awayName}</strong> (Visitante): ${data.expected_goals.away}</p>
+            <h4>Goles esperados del partido (xG)</h4>
+            <p><strong>${homeName}</strong>: ${data.expected_goals.home}</p>
+            <p><strong>${awayName}</strong>: ${data.expected_goals.away}</p>
 
             <h4>Probabilidades de Resultado (1X2)</h4>
             ${probabilityBar(`Gana ${homeName}`, data.probabilities.home_win)}
@@ -270,8 +274,58 @@ function renderPrediction(data) {
             ${probabilityBar("Sí, ambos anotan", data.probabilities.btts_yes)}
             ${probabilityBar("No anotan ambos", data.probabilities.btts_no)}
 
-            <h4>Marcadores más probables</h4>
+            <h4>Marcadores más probables (Matriz de 0-0 a 5-5)</h4>
             ${scoresHtml}
         </div>
     `;
 }
+
+const leagueSeasons = {
+    "WC": [
+        { value: "2026", text: "2026 (Mundial Actual)" },
+        { value: "2022", text: "2022 (Catar)" },
+        { value: "2018", text: "2018 (Rusia)" }
+    ],
+    "EC": [
+        { value: "2024", text: "2024 (Alemania)" },
+        { value: "2020", text: "2020 (Europa)" },
+        { value: "2016", text: "2016 (Francia)" }
+    ],
+    "CL": [
+        { value: "2025", text: "2025/2026 (Actual)" },
+        { value: "2024", text: "2024/2025" },
+        { value: "2023", text: "2023/2024" },
+        { value: "2022", text: "2022/2023" }
+    ],
+    "BSA": [
+        { value: "2026", text: "Temporada 2026 (Actual)" },
+        { value: "2025", text: "Temporada 2025" },
+        { value: "2024", text: "Temporada 2024" },
+        { value: "2023", text: "Temporada 2023" }
+    ],
+    "default": [
+        { value: "2025", text: "2025/2026 (Actual)" },
+        { value: "2024", text: "2024/2025" },
+        { value: "2023", text: "2023/2024" },
+        { value: "2022", text: "2022/2023" }
+    ]
+};
+
+function updateSeasonOptions() {
+    const leagueSelect = document.getElementById("league");
+    const seasonSelect = document.getElementById("season");
+    const league = leagueSelect.value;
+    
+    const seasons = leagueSeasons[league] || leagueSeasons["default"];
+    
+    seasonSelect.innerHTML = "";
+    seasons.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s.value;
+        opt.textContent = s.text;
+        seasonSelect.appendChild(opt);
+    });
+}
+
+// Inicializar las temporadas según el torneo seleccionado por defecto al cargar la página
+updateSeasonOptions();

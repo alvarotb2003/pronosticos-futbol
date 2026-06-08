@@ -15,16 +15,8 @@
     <div class="card">
         <h2>Seleccionar torneo y equipos</h2>
 
-        <label>Temporada</label>
-        <select id="season">
-            <option value="2026">2026</option>
-            <option value="2025">2025</option>
-            <option value="2024">2024</option>
-            <option value="2023">2023</option>
-        </select>
-
         <label>Torneo</label>
-        <select id="league">
+        <select id="league" onchange="updateSeasonOptions()">
             <option value="WC">Copa Mundial de la FIFA</option>
             <option value="EC">Eurocopa</option>
             <option value="CL">UEFA Champions League</option>
@@ -37,6 +29,11 @@
             <option value="PPL">Primeira Liga Portugal</option>
             <option value="ELC">Championship Inglaterra</option>
             <option value="BSA">Brasileirão Serie A</option>
+        </select>
+
+        <label>Temporada</label>
+        <select id="season">
+            <!-- Se carga dinámicamente mediante JS -->
         </select>
 
         <button onclick="loadTeams()">Cargar equipos del torneo</button>
